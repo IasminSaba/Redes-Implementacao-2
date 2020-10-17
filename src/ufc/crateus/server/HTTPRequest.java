@@ -36,25 +36,16 @@ public class HTTPRequest implements Runnable {
 	  private void processRequest() throws Exception {
 	        
 	        InputStream is = socket.getInputStream();
-	        DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 	        BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
-	       
+	   
 	        String requestLine = br.readLine(); //linha request
 	        
 	        StringTokenizer tokens = new StringTokenizer(requestLine);
 	        tokens.nextToken(); 
 	        String file= tokens.nextToken();
 
-	        file = "." + file; //Arquivo no diretório	        
-	        FileInputStream f = null;
-	        boolean fileExists = true;
-	        try {
-	            f = new FileInputStream(file);
-	        } catch (FileNotFoundException e) {
-	            fileExists = false;
-	        }
-
+	        
 	        
 	        System.out.println("Nova requisição.");
 	        System.out.println(requestLine);
@@ -63,63 +54,83 @@ public class HTTPRequest implements Runnable {
 	            System.out.println(headerLine);
 	        }
 
-	        String status = null;
-	        String content= null;
-	        String body = null;
-	        if (fileExists) {
-	            status= "HTTP/1.0 200 " + CRLF;
-	            content= "Content: "
-	                    + content(file) + CRLF;
-	        } else {
-	            status= "HTTP/1.0 404 Not Found" + CRLF;
-	            content= "Content-Type: index/html" + CRLF;
-	            body= "<HTML>"
-	                    + "<HEAD><TITLE>Not Found</TITLE></HEAD>"
-	                    + "<body>\n"
-	                    + "<div align=\"center\"><p><img alt=\"notFound\" src=\"../notFound.png\"\n"
-	                    + "width=\"350\"></p></div>\n"
-	                    + "</body></HTML>";
-	        }
+	        getResourse(file, br);
 	        
-
-	        os.writeBytes(status);
-	        os.writeBytes(content);
-
-	        //Indicar o fim de header
-	        os.writeBytes(CRLF);
-
-	        //Se o arquivo existir
-	        if (fileExists) {
-	            sendBytes(f, os);
-	            f.close();
-	        } else {
-	            os.writeBytes(body);
-	        }
-
-	       
-	        os.close();
-	        br.close();
-	        socket.close();
 	    }
 
-	    private static void sendBytes(FileInputStream fis,
-	            OutputStream os) throws Exception {
-	      
-	        byte[] buffer = new byte[1024];
-	        int bytes = 0;
+	  
+	  private void getResourse(String file, BufferedReader br ) throws Exception {
+		     DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+		     boolean fileExists = true;
+		     
+		     
+		     file = "." + file; //Arquivo no diretório	        
+		        FileInputStream f = null;
+		       
+		        try {
+		            f = new FileInputStream(file);
+		        } catch (FileNotFoundException e) {
+		            fileExists = false;
+		        }
 
-	        while ((bytes = fis.read(buffer)) != -1) {
-	            os.write(buffer, 0, bytes);
-	        }
-	    }
+		        
+		     String status = null;
+		        String content= null;
+		        String body = null;
+		        if (fileExists) {
+		            status= "HTTP/1.0 200 " + CRLF;
+		            content= "Content: "
+		                    + getContent(file) + CRLF;
+		        } else {
+		            status= "HTTP/1.0 404 Not Found" + CRLF;
+		            content= "Content-Type: index/html" + CRLF;
+		            body= "<HTML>"
+		                    + "<HEAD><TITLE>Not Found</TITLE></HEAD>"
+		                    + "<body>\n"
+		                    + "<div align=\"center\"><p><img alt=\"notFound\" src=\"../notFound.png\"\n"
+		                    + "width=\"350\"></p></div>\n"
+		                    + "</body></HTML>";
+		        }
+		        
 
-	    private static String content(String file) {
-	        if (file.endsWith(".html")) {
-	            return "index/html";
-	        }
-	        
-	        return "application/octet-stream";
-	    }
+		        os.writeBytes(status);
+		        os.writeBytes(content);
+
+		        //Indicar o fim de header
+		        os.writeBytes(CRLF);
+
+		        //Se o arquivo existir
+		        if (fileExists) {
+		            sendBytes(f, os);
+		            f.close();
+		        } else {
+		            os.writeBytes(body);
+		        }
+
+		       
+		        os.close();
+		        br.close();
+		        socket.close();
+	  }
+	  
+	  private static void sendBytes(FileInputStream fis,
+			  OutputStream os) throws Exception {
+	    
+		  byte[] buffer = new byte[1024];
+		  int bytes = 0;
+		  
+		  while ((bytes = fis.read(buffer)) != -1) {
+	          os.write(buffer, 0, bytes);
+	      }
+	  }
+
+	  private static String getContent(String file) {
+	      if (file.endsWith(".html")) {
+	          return "index/html";
+	      }
+
+	      return "application/octet-stream";
+	  }
 }
 
 
